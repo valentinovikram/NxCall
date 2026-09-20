@@ -1,0 +1,80 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role { ADMIN, CALLER }
+enum Priority { High, Medium, Low }
+enum Status { New, Called, Interested, Not_Interested, Follow_up, Converted, Not_Reachable, Wrong_Number }
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      Role     @default(CALLER)
+  customers Customer[]
+  callLogs  CallLog[]
+  followUps FollowUp[]
+}
+
+model Customer {
+  id           Int          @id @default(autoincrement())
+  name         String
+  phone        String
+  altPhone     String?
+  priority     Priority     @default(Medium)
+  status       Status       @default(New)
+  callAttempts Int          @default(0)
+  lastCalledAt DateTime?
+  callerId     Int
+  caller       User         @relation(fields: [callerId], references: [id])
+  vehicleInfo  VehicleInfo?
+  callLogs     CallLog[]
+  followUps    FollowUp[]
+  createdAt    DateTime     @default(now())
+}
+
+model VehicleInfo {
+  id              Int       @id @default(autoincrement())
+  customerId      Int       @unique
+  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  brand           String
+  model           String
+  variant         String?
+  fuelType        String?
+  transmission    String?
+  budget          Float?
+  exchangeVehicle String?
+  financeRequired Boolean   @default(false)
+  testDriveReq    Boolean   @default(false)
+  bookingStatus   String?
+  deliveryStatus  String?
+  lostReason      String?
+}
+
+model CallLog {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+  callerId   Int
+  caller     User     @relation(fields: [callerId], references: [id])
+  duration   Int      // in seconds
+  status     Status
+  notes      String?
+  createdAt  DateTime @default(now())
+}
+
+model FollowUp {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+  callerId   Int
+  caller     User     @relation(fields: [callerId], references: [id])
+  date       DateTime
+  notes      String?
+  completed  Boolean  @default(false)
+}
