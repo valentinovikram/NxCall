@@ -5,13 +5,39 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient();
+function createPrismaClient() {
+    const databaseUrl = process.env.DATABASE_URL;
+
+    if (!databaseUrl) {
+        console.warn('DATABASE_URL is not set. Prisma is disabled until a valid PostgreSQL URL is configured.');
+        return null;
+    }
+
+    try {
+        return new PrismaClient();
+    } catch (error) {
+        console.error('Prisma client initialization failed. Check DATABASE_URL:', error.message);
+        return null;
+    }
+}
+
+const prisma = createPrismaClient();
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'render_super_secret_key';
+
+function requireDatabase(res) {
+    if (!prisma) {
+        res.status(503).json({
+            error: 'Database is not configured. Please set DATABASE_URL to a valid PostgreSQL URL, e.g. postgresql://user:password@host:5432/dbname?sslmode=require'
+        });
+        return false;
+    }
+    return true;
+}
 
 // Middleware for token verification
 function authenticateToken(req, res, next) {
@@ -28,11 +54,12 @@ function authenticateToken(req, res, next) {
 
 // --- API AUTH ---
 app.post('/api/auth/login', async (req, res) => {
+    if (!requireDatabase(res)) return;
+
     const { username, password } = req.body;
     try {
         let user = await prisma.user.findUnique({ where: { username } });
-        
-        // Auto-seed default admin if no users exist
+
         if (!user && username === 'admin' && password === 'admin123') {
             const hashedPassword = bcrypt.hashSync('admin123', 8);
             user = await prisma.user.create({
@@ -53,6 +80,8 @@ app.post('/api/auth/login', async (req, res) => {
 
 // --- API CUSTOMERS ---
 app.get('/api/customers', authenticateToken, async (req, res) => {
+    if (!requireDatabase(res)) return;
+
     try {
         const customers = await prisma.customer.findMany({
             include: { vehicleInfo: true, caller: { select: { username: true } } },
@@ -65,6 +94,8 @@ app.get('/api/customers', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/customers', authenticateToken, async (req, res) => {
+    if (!requireDatabase(res)) return;
+
     try {
         const { name, phone, priority, status, brand, model, budget } = req.body;
         const customer = await prisma.customer.create({
@@ -88,6 +119,8 @@ app.post('/api/customers', authenticateToken, async (req, res) => {
 
 // --- API CALL LOGS ---
 app.post('/api/calls', authenticateToken, async (req, res) => {
+    if (!requireDatabase(res)) return;
+
     try {
         const { customerId, duration, status, notes } = req.body;
         const callLog = await prisma.callLog.create({
