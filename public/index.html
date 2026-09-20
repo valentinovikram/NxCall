@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Sales CRM & Telecalling</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="h-full flex flex-col justify-between">
+    <div id="loginView" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-8">
+            <div class="text-center mb-8">
+                <i class="fa-solid fa-car-side text-4xl text-blue-600 mb-2"></i>
+                <h2 class="text-2xl font-bold text-gray-900">Vehicle Sales CRM</h2>
+                <p class="text-sm text-gray-500">Sign in to start your telecalling session</p>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div><label class="block text-sm font-medium text-gray-700">Username</label><input type="text" id="username" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-blue-500 focus:border-blue-500"></div>
+                <div><label class="block text-sm font-medium text-gray-700">Password</label><input type="password" id="password" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-blue-500 focus:border-blue-500"></div>
+                <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition">Sign In</button>
+                <p id="loginError" class="text-red-500 text-xs text-center mt-2"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="appView" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+        <header class="bg-white shadow-sm px-6 py-4 flex justify-between items-center z-10">
+            <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-gauge text-blue-600"></i> <span id="pageTitle">Dashboard</span></h1>
+            <div class="flex items-center gap-4"><span id="userBadge" class="text-xs font-medium bg-blue-100 text-blue-800 px-3 py-1 rounded-full"></span><button onclick="logout()" class="text-gray-500 hover:text-red-600"><i class="fa-solid fa-right-from-bracket text-lg"></i></button></div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 pb-24">
+            <div id="tabDashboard" class="space-y-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border"><p class="text-xs text-gray-500 font-medium">Total Customers</p><h3 id="statTotal" class="text-2xl font-bold text-gray-900 mt-1">0</h3></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border"><p class="text-xs text-gray-500 font-medium">Interested</p><h3 id="statInterested" class="text-2xl font-bold text-green-600 mt-1">0</h3></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border"><p class="text-xs text-gray-500 font-medium">Follow-ups Due</p><h3 id="statFollowups" class="text-2xl font-bold text-amber-600 mt-1">0</h3></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border"><p class="text-xs text-gray-500 font-medium">Converted</p><h3 id="statConverted" class="text-2xl font-bold text-blue-600 mt-1">0</h3></div>
+                </div>
+            </div>
+
+            <div id="tabCustomers" class="hidden space-y-4">
+                <div class="flex justify-between items-center"><input type="text" id="searchInput" placeholder="Search customer or phone..." oninput="filterCustomers()" class="px-4 py-2 border rounded-lg w-full max-w-sm text-sm"><button onclick="openAddCustomerModal()" class="ml-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700"><i class="fa-solid fa-plus mr-1"></i> Add Lead</button></div>
+                <div id="customerList" class="grid gap-3"></div>
+            </div>
+
+            <div id="tabFollowups" class="hidden space-y-4"><div class="bg-white p-4 rounded-xl shadow-sm border"><h3 class="font-semibold text-gray-800 mb-2">Scheduled Follow-ups</h3><p class="text-sm text-gray-500">Your reminders will populate here seamlessly from customer logs.</p></div></div>
+            <div id="tabAdmin" class="hidden space-y-4"><div class="bg-white p-4 rounded-xl shadow-sm border"><h3 class="font-semibold text-gray-800 mb-2">Admin Control Center</h3><p class="text-sm text-gray-500">Monitor overall team performance, export spreadsheets, and audit call durations.</p></div></div>
+        </main>
+
+        <nav class="bg-white border-t fixed bottom-0 left-0 right-0 h-16 flex justify-around items-center px-2 z-20">
+            <button onclick="switchTab('Dashboard', this)" class="nav-btn flex flex-col items-center text-blue-600 flex-1"><i class="fa-solid fa-chart-pie text-lg"></i><span class="text-[10px] mt-1 font-medium">Dashboard</span></button>
+            <button onclick="switchTab('Customers', this)" class="nav-btn flex flex-col items-center text-gray-400 flex-1"><i class="fa-solid fa-users text-lg"></i><span class="text-[10px] mt-1 font-medium">Customers</span></button>
+            <button onclick="switchTab('Followups', this)" class="nav-btn flex flex-col items-center text-gray-400 flex-1"><i class="fa-solid fa-calendar-check text-lg"></i><span class="text-[10px] mt-1 font-medium">Follow-ups</span></button>
+            <button onclick="switchTab('Admin', this)" class="nav-btn flex flex-col items-center text-gray-400 flex-1"><i class="fa-solid fa-shield-halved text-lg"></i><span class="text-[10px] mt-1 font-medium">Admin</span></button>
+        </nav>
+    </div>
+
+    <div id="callModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4"><h3 class="text-lg font-bold text-gray-900">Log Call Outcome</h3><input type="hidden" id="activeCustomerId"><div><label class="block text-sm font-medium text-gray-700">Update Status</label><select id="callStatusSelect" class="mt-1 block w-full rounded-md border p-2 text-sm"><option value="Interested">Interested</option><option value="Not_Interested">Not Interested</option><option value="Follow_up">Follow-up Required</option><option value="Converted">Converted (Booked)</option><option value="Not_Reachable">Not Reachable</option><option value="Wrong_Number">Wrong Number</option></select></div><div><label class="block text-sm font-medium text-gray-700">Call Notes</label><textarea id="callNotes" rows="3" class="mt-1 block w-full border rounded-md p-2 text-sm" placeholder="Mention budget preference, model chosen..."></textarea></div><div class="flex gap-2"><button onclick="closeCallModal()" class="w-1/2 bg-gray-200 text-gray-700 py-2 rounded-lg font-medium text-sm">Cancel</button><button onclick="submitCallLog()" class="w-1/2 bg-green-600 text-white py-2 rounded-lg font-medium text-sm">Save Log</button></div></div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+        let currentUser = localStorage.getItem('username');
+        let customersData = [];
+
+        if (token) { document.getElementById('loginView').classList.add('hidden'); document.getElementById('appView').classList.remove('hidden'); document.getElementById('userBadge').innerText = currentUser; loadAppData(); }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            try {
+                const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+                const data = await res.json();
+                if (res.ok) { localStorage.setItem('token', data.token); localStorage.setItem('username', data.username); location.reload(); }
+                else document.getElementById('loginError').innerText = data.error || 'Login failed';
+            } catch (err) { document.getElementById('loginError').innerText = 'Server connection error'; }
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+
+        function switchTab(tabName, btnElement) {
+            document.querySelectorAll('main > div').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab' + tabName).classList.remove('hidden');
+            document.getElementById('pageTitle').innerText = tabName;
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.replace('text-blue-600', 'text-gray-400'));
+            btnElement.classList.replace('text-gray-400', 'text-blue-600');
+        }
+
+        async function loadAppData() {
+            try {
+                const res = await fetch('/api/customers', { headers: { 'Authorization': 'Bearer ' + token } });
+                if (res.status === 401 || res.status === 403) return logout();
+                customersData = await res.json();
+                renderDashboardMetrics();
+                renderCustomersList(customersData);
+            } catch (err) { console.error('Failed to load application data', err); }
+        }
+
+        function renderDashboardMetrics() {
+            document.getElementById('statTotal').innerText = customersData.length;
+            document.getElementById('statInterested').innerText = customersData.filter(c => c.status === 'Interested').length;
+            document.getElementById('statFollowups').innerText = customersData.filter(c => c.status === 'Follow_up').length;
+            document.getElementById('statConverted').innerText = customersData.filter(c => c.status === 'Converted').length;
+        }
+
+        function renderCustomersList(data) {
+            const container = document.getElementById('customerList');
+            container.innerHTML = data.map(c => `<div class="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center"><div><h4 class="font-bold text-gray-800 text-sm">${escapeHtml(c.name)}</h4><p class="text-xs text-gray-500">${c.vehicleInfo ? escapeHtml(c.vehicleInfo.brand + ' ' + c.vehicleInfo.model) : 'No Vehicle Info'} • <span class="font-semibold text-blue-600">${escapeHtml(c.status)}</span></p></div><div class="flex items-center gap-2"><a href="tel:${escapeHtml(c.phone)}" onclick="triggerCallModal(${c.id})" class="bg-green-500 text-white w-12 h-12 rounded-full flex items-center justify-center shadow hover:bg-green-600 transition"><i class="fa-solid fa-phone text-lg"></i></a></div></div>`).join('');
+        }
+
+        function escapeHtml(value) { const div = document.createElement('div'); div.textContent = value ?? ''; return div.innerHTML; }
+        function triggerCallModal(customerId) { document.getElementById('activeCustomerId').value = customerId; setTimeout(() => document.getElementById('callModal').classList.remove('hidden'), 1000); }
+        function closeCallModal() { document.getElementById('callModal').classList.add('hidden'); }
+
+        async function submitCallLog() {
+            const customerId = document.getElementById('activeCustomerId').value;
+            const status = document.getElementById('callStatusSelect').value;
+            const notes = document.getElementById('callNotes').value;
+            await fetch('/api/calls', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ customerId, duration: 45, status, notes }) });
+            closeCallModal();
+            document.getElementById('callNotes').value = '';
+            loadAppData();
+        }
+
+        function filterCustomers() { const query = document.getElementById('searchInput').value.toLowerCase(); renderCustomersList(customersData.filter(c => c.name.toLowerCase().includes(query) || c.phone.includes(query))); }
+        function openAddCustomerModal() { alert('Add customer form is not yet available.'); }
+    </script>
+</body>
+</html>
