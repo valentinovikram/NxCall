@@ -7,9 +7,27 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum Role { ADMIN, CALLER }
-enum Priority { High, Medium, Low }
-enum Status { New, Called, Interested, Not_Interested, Follow_up, Converted, Not_Reachable, Wrong_Number }
+enum Role { 
+  ADMIN 
+  CALLER 
+}
+
+enum Priority { 
+  High 
+  Medium 
+  Low 
+}
+
+enum Status { 
+  New 
+  Called 
+  Interested 
+  Not_Interested 
+  Follow_up 
+  Converted 
+  Not_Reachable 
+  Wrong_Number 
+}
 
 model User {
   id        Int      @id @default(autoincrement())
@@ -62,7 +80,7 @@ model CallLog {
   customer   Customer @relation(fields: [customerId], references: [id])
   callerId   Int
   caller     User     @relation(fields: [callerId], references: [id])
-  duration   Int      // in seconds
+  duration   Int      
   status     Status
   notes      String?
   createdAt  DateTime @default(now())
